@@ -1,2 +1,2 @@
-## job-application-tracker
+# job-application-tracker
 # tracks jobs :D
