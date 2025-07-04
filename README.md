@@ -1,2 +1,1 @@
-# job-application-tracker
-tracks jobs :D
+# URL Risk Predicter
