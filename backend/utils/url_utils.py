@@ -17,3 +17,6 @@ def analyze_redirects(url: str) -> Dict[str, Any]:
         - is_redirect: Boolean indicating if redirects occurred
         - resolved_url: Final URL after all redirects
     """
+    redirect_chain = []
+    current_url = url
+    max_redirects = 10
