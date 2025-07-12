@@ -4,6 +4,21 @@ import difflib
 from urllib.parse import urlparse
 
 
+SUSPICIOUS_TLDS = ['.xyz', '.top', '.tk',
+                   '.ml', '.ga', '.cf', '.gq', '.zip', '.mov']
+SUSPICIOUS_KEYWORDS = [
+    'secure', 'login', 'signin', 'account', 'verify', 'confirm',
+    'update', 'bank', 'paypal', 'amazon', 'google', 'facebook',
+    'microsoft', 'apple', 'netflix', 'spotify', 'ebay', 'pay'
+]
+KNOWN_BRANDS = [
+    'paypal', 'google', 'facebook', 'amazon', 'microsoft',
+    'apple', 'netflix', 'spotify', 'ebay', 'yahoo', 'twitter'
+]
+BIT_SQUAT_CHARS = ['1', '0', '5', '3', '8']
+ZERO_WIDTH_CHARS = ['\u200b', '\u200c', '\u200d', '\u2060']
+
+
 def analyze_domain(url: str) -> Dict[str, Any]:
     """
     Analyze domain for suspicious patterns.
@@ -20,25 +35,20 @@ def analyze_domain(url: str) -> Dict[str, Any]:
         - entropy_score: Domain entropy
         - length: Domain length
     """
-
-    parsed_url = urlparse(url)
-    domain = parsed_url.netloc
-
-    if ':' in domain:
-        domain = domain.split(':')[0]
+    parsed = urlparse(url)
+    domain = parsed.netloc.split(':')[0]
+    domain_lower = domain.lower().strip()
 
     analysis = {
-        "domain": domain,
-        "tld": domain.split('.')[-1] if '.' in domain else '',
-        "suspicious_tld": False,
-        "suspicious_keywords": [],
-        "entropy_score": calculate_entropy(domain),
-        "length": len(domain),
-        "similarity_attacks": detect_similarity_attacks(domain),
-        "brand_similarity": check_brand_similarity(domain)
+        "domain": domain_lower,
+        "tld": domain_lower.split('.')[-1] if '.' in domain_lower else '',
+        "suspicious_tld": any(domain_lower.endswith(tld) for tld in SUSPICIOUS_TLDS),
+        "suspicious_keywords": [kw for kw in SUSPICIOUS_KEYWORDS if kw in domain_lower],
+        "entropy_score": calculate_entropy(domain_lower),
+        "length": len(domain_lower),
+        "similarity_attacks": detect_similarity_attacks(domain_lower),
+        "brand_similarity": check_brand_similarity(domain_lower)
     }
-
-    # add TLD check and keyword check
 
     return analysis
 
