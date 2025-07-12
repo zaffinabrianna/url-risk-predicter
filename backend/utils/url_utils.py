@@ -21,21 +21,21 @@ def analyze_redirects(url: str) -> Dict[str, Any]:
     current_url = url
     max_redirects = 10
 
-     try:
+    try:
         for i in range(max_redirects):
             # Make HEAD request (faster than GET, doesn't download content)
             response = requests.head(
-                current_url, 
+                current_url,
                 allow_redirects=False,  # Don't auto-follow redirects
                 timeout=10,
                 headers={
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
                 }
             )
-            
+
             # Add current URL to chain
             redirect_chain.append(current_url)
-            
+
             # Check if response is a redirect
             if response.status_code in [301, 302, 303, 307, 308]:
                 # Get the redirect location
@@ -49,7 +49,7 @@ def analyze_redirects(url: str) -> Dict[str, Any]:
             else:
                 # Not a redirect, we're done
                 break
-                
+
     except requests.exceptions.RequestException as e:
         # Handle network errors (timeout, connection refused, etc.)
         return {
@@ -68,7 +68,7 @@ def analyze_redirects(url: str) -> Dict[str, Any]:
             "is_redirect": False,
             "resolved_url": url
         }
-    
+
     return {
         "redirect_chain": redirect_chain,
         "num_redirects": len(redirect_chain) - 1,
