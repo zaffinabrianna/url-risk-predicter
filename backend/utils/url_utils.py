@@ -70,3 +70,17 @@ def analyze_redirects(url: str) -> Dict[str, Any]:
         "is_redirect": len(redirect_chain) > 1,
         "resolved_url": current_url
     }
+
+
+if __name__ == "__main__":
+    test_urls = [
+        "https://www.google.com",
+        "https://httpbin.org/redirect/1",
+        "https://httpbin.org/redirect/2",
+        "https://invalid-url-that-doesnt-exist.com"
+    ]
+
+    for url in test_urls:
+        print(f"\nTesting Url: {url}")
+        result = analyze_redirects(url)
+        print(f"Result: {result}")
