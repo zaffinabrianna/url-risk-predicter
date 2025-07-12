@@ -20,3 +20,58 @@ def analyze_redirects(url: str) -> Dict[str, Any]:
     redirect_chain = []
     current_url = url
     max_redirects = 10
+
+     try:
+        for i in range(max_redirects):
+            # Make HEAD request (faster than GET, doesn't download content)
+            response = requests.head(
+                current_url, 
+                allow_redirects=False,  # Don't auto-follow redirects
+                timeout=10,
+                headers={
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                }
+            )
+            
+            # Add current URL to chain
+            redirect_chain.append(current_url)
+            
+            # Check if response is a redirect
+            if response.status_code in [301, 302, 303, 307, 308]:
+                # Get the redirect location
+                location = response.headers.get('Location')
+                if location:
+                    # Convert relative URLs to absolute
+                    current_url = urljoin(current_url, location)
+                else:
+                    # No location header, stop following
+                    break
+            else:
+                # Not a redirect, we're done
+                break
+                
+    except requests.exceptions.RequestException as e:
+        # Handle network errors (timeout, connection refused, etc.)
+        return {
+            "error": f"Network error: {str(e)}",
+            "redirect_chain": [url],
+            "num_redirects": 0,
+            "is_redirect": False,
+            "resolved_url": url
+        }
+    except Exception as e:
+        # Handle other errors
+        return {
+            "error": f"Unexpected error: {str(e)}",
+            "redirect_chain": [url],
+            "num_redirects": 0,
+            "is_redirect": False,
+            "resolved_url": url
+        }
+    
+    return {
+        "redirect_chain": redirect_chain,
+        "num_redirects": len(redirect_chain) - 1,
+        "is_redirect": len(redirect_chain) > 1,
+        "resolved_url": current_url
+    }
