@@ -60,17 +60,14 @@ def calculate_entropy(domain: str) -> float:
     if not domain:
         return 0.0
 
-    frequency = {}
-    for char in domain:
-        frequency[char] = frequency.get(char, 0) + 1
+    freq = {}
+    for c in domain:
+        freq[c] = freq.get(c, 0) + 1
 
     entropy = 0.0
-    length = len(domain)
-    for count in frequency.values():
-        p = count / length
-        if p > 0:
-            entropy -= p * math.log2(p)
-
+    for count in freq.values():
+        p = count / len(domain)
+        entropy -= p * math.log2(p)
     return entropy
 
 
@@ -79,53 +76,27 @@ def detect_similarity_attacks(domain: str) -> Dict[str, bool]:
     Detect various similarity-based attacks.
     """
     attacks = {
-        "homograph": False,
-        "punycode": False,
-        "bit_squatting": False,
-        "combosquatting": False,
-        "zero_width": False
+        "homograph": any(ord(c) > 127 for c in domain),
+        "punycode": domain.startswith("xn--"),
+        "bit_squatting": any(ch in domain for ch in BIT_SQUAT_CHARS),
+        "combosquatting": '-' in domain,
+        "zero_width": any(ch in domain for ch in ZERO_WIDTH_CHARS),
     }
 
-    domain = domain.strip().lower()
-
-    if any(ord(c) > 127 for c in domain):
-        attacks["homograph"] = True
-
-    if domain.startswith("xn--"):
-        attacks["punycode"] = True
-
-    if any(char in domain for char in ['1', '0', '5', '3', '8']):
-        attacks["bit_squatting"] = True
-
-    if '-' in domain:
-        attacks["combosquatting"] = True
-
-    # Zero-width character check
-    zero_width_chars = ['\u200b', '\u200c', '\u200d', '\u2060']
-    if any(char in domain for char in zero_width_chars):
-        attacks["zero_width"] = True
+    return attacks
 
 
 def check_brand_similarity(domain: str) -> Dict[str, bool]:
     """
     Check similarity to known brands (inspired by the research paper's USI).
     """
-    known_brands = [
-        'paypal', 'google', 'facebook', 'amazon', 'microsoft',
-        'apple', 'netflix', 'spotify', 'ebay', 'yahoo', 'twitter'
-    ]
-
-    domain_lower = domain.lower()
     similarities = {}
-
-    for brand in known_brands:
-        if brand in domain_lower:
+    for brand in KNOWN_BRANDS:
+        if brand in domain:
             similarities[brand] = True
         else:
-            score = calculate_string_similarity(domain_lower, brand)
-            if score > 0.7:
-                similarities[brand] = True
-
+            similarities[brand] = calculate_string_similarity(
+                domain, brand) > 0.7
     return similarities
 
 
