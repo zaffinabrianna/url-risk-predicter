@@ -43,12 +43,22 @@ def analyze_domain(url: str) -> Dict[str, Any]:
         "domain": domain_lower,
         "tld": domain_lower.split('.')[-1] if '.' in domain_lower else '',
         "suspicious_tld": any(domain_lower.endswith(tld) for tld in SUSPICIOUS_TLDS),
-        "suspicious_keywords": [kw for kw in SUSPICIOUS_KEYWORDS if kw in domain_lower],
         "entropy_score": calculate_entropy(domain_lower),
         "length": len(domain_lower),
         "similarity_attacks": detect_similarity_attacks(domain_lower),
         "brand_similarity": check_brand_similarity(domain_lower)
     }
+
+    suspicious = []
+    for kw in SUSPICIOUS_KEYWORDS:
+        if kw in domain_lower:
+            if kw in KNOWN_BRANDS:
+                # only flag brand if it's NOT exactly kw.com
+                if domain_lower != f"{kw}.com":
+                    suspicious.append(kw)
+            else:
+                suspicious.append(kw)
+    analysis["suspicious_keywords"] = suspicious
 
     return analysis
 
