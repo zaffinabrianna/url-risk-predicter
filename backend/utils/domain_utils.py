@@ -96,17 +96,31 @@ def detect_similarity_attacks(domain: str) -> Dict[str, bool]:
     return attacks
 
 
-def check_brand_similarity(domain: str) -> Dict[str, bool]:
+def check_brand_similarity(domain: str) -> dict:
     """
-    Check similarity to known brands (inspired by the research paper's USI).
+    Check similarity to known brands, but do NOT flag if domain is the official brand domain.
     """
+    known_brands = [
+        'paypal', 'google', 'facebook', 'amazon', 'microsoft',
+        'apple', 'netflix', 'spotify', 'ebay', 'yahoo', 'twitter'
+    ]
+    official_brand_domains = [
+        'paypal.com', 'google.com', 'facebook.com', 'amazon.com', 'microsoft.com',
+        'apple.com', 'netflix.com', 'spotify.com', 'ebay.com', 'yahoo.com', 'twitter.com'
+    ]
+    domain_lower = domain.lower()
     similarities = {}
-    for brand in KNOWN_BRANDS:
-        if brand in domain:
+    for brand in known_brands:
+        official_domain = f"{brand}.com"
+        # Only flag as similar if not the official brand domain
+        if domain_lower == official_domain:
+            similarities[brand] = False
+        elif brand in domain_lower or domain_lower in brand:
             similarities[brand] = True
         else:
-            similarities[brand] = calculate_string_similarity(
-                domain, brand) > 0.7
+            # Check for character substitutions (simple similarity)
+            similarity_score = calculate_string_similarity(domain_lower, brand)
+            similarities[brand] = similarity_score > 0.7 and domain_lower != official_domain
     return similarities
 
 

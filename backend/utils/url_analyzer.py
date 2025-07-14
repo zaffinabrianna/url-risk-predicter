@@ -13,16 +13,3 @@ def analyze_url(url: str) -> dict:
         "domain analysis": domain_info,
         **risk_info
     }
-
-
-if __name__ == "__main__":
-    test_urls = [
-        "https://google.com",
-        "https://paypa1-secure.xyz",
-        "https://bit.ly/3G5F4k9",
-        "https://xn--paypal-fake.com"
-    ]
-    for url in test_urls:
-        print(f"\nTesting: {url}")
-        result = analyze_url(url)
-        print(result)
