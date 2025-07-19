@@ -24,10 +24,10 @@ function App() {
       })
 
       const data = await response.json()
-      console.log('API Response:', data) // Add this line to debug
+      console.log('API Response:', data) 
       setResult(data)
     } catch (err) {
-      console.error('Error:', err) // Add this line to debug
+      console.error('Error:', err) 
       setError('Failed to analyze URL. Please try again.')
     } finally {
       setIsLoading(false)
@@ -85,14 +85,6 @@ function App() {
                 </ul>
               </div>
             )}
-            
-            {/* Add this debug section */}
-            <details style={{ marginTop: '10px' }}>
-              <summary>Debug: Raw API Response</summary>
-              <pre style={{ fontSize: '12px', overflow: 'auto', backgroundColor: '#f0f0f0', padding: '10px' }}>
-                {JSON.stringify(result, null, 2)}
-              </pre>
-            </details>
           </div>
         </div>
       )}
