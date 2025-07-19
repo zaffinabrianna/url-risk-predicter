@@ -31,6 +31,23 @@ async def health_check():
     }
 
 
+@app.post("/analyze")
+async def analyze_url_endpoint(url: str):
+    """
+    Analyze a URL for potential threats.
+
+    Args:
+        url: The URL to analyze
+
+    Returns:
+        Complete analysis including redirect info, domain analysis, and risk score
+    """
+    try:
+        result = analyze_url(url)
+        return result
+    except Exception as e:
+        return {"error": f"Analysis failed: {str(e)}"}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
