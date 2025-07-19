@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Form
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from utils.url_analyzer import analyze_url
@@ -32,7 +32,7 @@ async def health_check():
 
 
 @app.post("/analyze")
-async def analyze_url_endpoint(url: str):
+async def analyze_url_endpoint(url: str = Form(...)):
     """
     Analyze a URL for potential threats.
 
