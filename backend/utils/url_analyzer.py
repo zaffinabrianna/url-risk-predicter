@@ -1,6 +1,6 @@
-from url_utils import analyze_redirects
-from domain_utils import analyze_domain
-from risk_scorer import calculate_risk_score
+from .url_utils import analyze_redirects
+from .domain_utils import analyze_domain
+from .risk_scorer import calculate_risk_score
 
 
 def analyze_url(url: str) -> dict:
