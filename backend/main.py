@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
+from utils.url_analyzer import analyze_url
 
 app = FastAPI(
     title="API for project",
@@ -28,6 +29,7 @@ async def health_check():
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
     }
+
 
 if __name__ == "__main__":
     import uvicorn
