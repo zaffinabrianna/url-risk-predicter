@@ -9,6 +9,7 @@ function App() {
   const [feedback, setFeedback] = useState('')
   const [vote, setVote] = useState('')
   const [feedbackStatus, setFeedbackStatus] = useState('')
+  const [doNotLog, setDoNotLog] = useState(false)
 
   const analyzeUrl = async () => {
     if (!url) return
@@ -26,7 +27,7 @@ function App() {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: `url=${encodeURIComponent(url)}`
+        body: `url=${encodeURIComponent(url)}&do_not_log=${doNotLog}`
       })
 
       const data = await response.json()
@@ -54,6 +55,7 @@ function App() {
           url: url,
           user_vote: vote,
           feedback: feedback,
+          do_not_log: doNotLog
         })
       })
       if (response.ok) {
@@ -119,7 +121,7 @@ function App() {
           <div style={{ 
             display: 'flex', 
             gap: '12px',
-            marginBottom: '20px'
+            marginBottom: '8px'
           }}>
             <input
               type="text"
@@ -155,6 +157,18 @@ function App() {
             >
               {isLoading ? 'Analyzing...' : 'Analyze URL'}
             </button>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', marginTop: '8px', marginBottom: '20px' }}>
+            <input
+              type="checkbox"
+              id="doNotLog"
+              checked={doNotLog}
+              onChange={e => setDoNotLog(e.target.checked)}
+              style={{ marginRight: '8px' }}
+            />
+            <label htmlFor="doNotLog" style={{ fontSize: '14px', color: '#6b7280' }}>
+              Do not log this analysis (your result and feedback will not be saved)
+            </label>
           </div>
         </div>
 
@@ -290,7 +304,9 @@ function App() {
               borderRadius: '8px',
               padding: '16px',
               border: '1px solid #e5e7eb',
-              marginTop: '20px'
+              marginTop: '20px',
+              opacity: doNotLog ? 0.5 : 1,
+              pointerEvents: doNotLog ? 'none' : 'auto'
             }}>
               <p style={{
                 margin: '0 0 12px 0',
