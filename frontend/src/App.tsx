@@ -22,7 +22,11 @@ function App() {
   const [doNotLog, setDoNotLog] = useState(false)
 
   const analyzeUrl = async () => {
-    if (!url) return
+    if (!url) return;
+    let urlToAnalyze = url;
+    if (!/^https?:\/\//i.test(urlToAnalyze)) {
+      urlToAnalyze = 'https://' + urlToAnalyze;
+    }
     setIsLoading(true)
     setError('')
     setResult(null)
@@ -35,7 +39,7 @@ function App() {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: `url=${encodeURIComponent(url)}&do_not_log=${doNotLog}`
+        body: `url=${encodeURIComponent(urlToAnalyze)}&do_not_log=${doNotLog}`
       })
       const data = await response.json()
       setResult(data)
