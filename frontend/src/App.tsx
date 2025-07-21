@@ -2,7 +2,6 @@ import { useState } from 'react'
 import './App.css'
 
 function processRiskFactors(riskFactors: string[]) {
-  // If any risk factor contains "Brand similarity", replace all with one generic message
   if (riskFactors.some(f => f.toLowerCase().includes("brand similarity"))) {
     return [
       ...riskFactors.filter(f => !f.toLowerCase().includes("brand similarity")),
@@ -24,14 +23,12 @@ function App() {
 
   const analyzeUrl = async () => {
     if (!url) return
-
     setIsLoading(true)
     setError('')
     setResult(null)
     setFeedback('')
     setVote('')
     setFeedbackStatus('')
-
     try {
       const response = await fetch('http://localhost:8000/analyze', {
         method: 'POST',
@@ -40,7 +37,6 @@ function App() {
         },
         body: `url=${encodeURIComponent(url)}&do_not_log=${doNotLog}`
       })
-
       const data = await response.json()
       setResult(data)
     } catch (err) {
@@ -97,42 +93,52 @@ function App() {
   }
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      backgroundColor: '#f8fafc',
-      padding: '20px'
-    }}>
-      <div style={{ 
-        maxWidth: '800px', 
-        margin: '0 auto',
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-        padding: '40px'
-      }}>
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <h1 style={{ 
-            fontSize: '2.5rem', 
-            fontWeight: 'bold', 
-            color: '#1f2937',
-            marginBottom: '8px'
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'radial-gradient(circle at center, #e0e7ff 0%, #f3f4f6 70%, #fff 100%)',
+        fontFamily: 'Inter, Segoe UI, Arial, sans-serif',
+        padding: '0',
+        margin: '0',
+      }}
+    >
+      <div
+        style={{
+          maxWidth: '700px',
+          margin: '0 auto',
+          backgroundColor: 'white',
+          borderRadius: '18px',
+          boxShadow: '0 8px 32px 0 rgba(31, 41, 55, 0.12)',
+          padding: '48px 48px 32px 48px',
+          marginTop: '32px',
+          marginBottom: '32px',
+        }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <h1 style={{
+            fontSize: '2.2rem',
+            fontWeight: 800,
+            color: '#1e293b',
+            marginBottom: '10px',
+            letterSpacing: '-1px',
           }}>
             LinkShield
           </h1>
-          <p style={{ 
-            fontSize: '1.1rem', 
-            color: '#6b7280',
-            margin: '0'
+          <p style={{
+            fontSize: '1.08rem',
+            color: '#64748b',
+            margin: '0',
+            fontWeight: 500,
           }}>
             Smart Malicious URL Checker
           </p>
         </div>
-        
-        <div style={{ marginBottom: '30px' }}>
-          <div style={{ 
-            display: 'flex', 
-            gap: '12px',
-            marginBottom: '8px'
+
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{
+            display: 'flex',
+            gap: '10px',
+            marginBottom: '10px',
           }}>
             <input
               type="text"
@@ -141,35 +147,38 @@ function App() {
               onChange={(e) => setUrl(e.target.value)}
               style={{
                 flex: 1,
-                padding: '12px 16px',
-                border: '2px solid #e5e7eb',
-                borderRadius: '8px',
+                padding: '14px 18px',
+                border: '2px solid #e0e7ef',
+                borderRadius: '10px',
                 fontSize: '16px',
                 outline: 'none',
-                transition: 'border-color 0.2s'
+                transition: 'border-color 0.2s',
+                background: '#f1f5f9',
+                fontWeight: 500,
               }}
-              onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-              onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+              onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+              onBlur={(e) => e.target.style.borderColor = '#e0e7ef'}
             />
-            <button 
+            <button
               onClick={analyzeUrl}
               disabled={isLoading || !url}
               style={{
-                padding: '12px 24px',
-                backgroundColor: isLoading || !url ? '#9ca3af' : '#3b82f6',
+                padding: '14px 28px',
+                background: isLoading || !url ? '#cbd5e1' : 'linear-gradient(90deg, #6366f1 0%, #3b82f6 100%)',
                 color: 'white',
                 border: 'none',
-                borderRadius: '8px',
+                borderRadius: '10px',
                 fontSize: '16px',
-                fontWeight: '600',
+                fontWeight: 700,
                 cursor: isLoading || !url ? 'not-allowed' : 'pointer',
-                transition: 'background-color 0.2s'
+                boxShadow: isLoading || !url ? 'none' : '0 2px 8px 0 rgba(59, 130, 246, 0.08)',
+                transition: 'background 0.2s',
               }}
             >
-              {isLoading ? 'Analyzing...' : 'Analyze URL'}
+              {isLoading ? 'Analyzing...' : 'Analyze'}
             </button>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', marginTop: '8px', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginTop: '8px', marginBottom: '18px' }}>
             <input
               type="checkbox"
               id="doNotLog"
@@ -184,123 +193,138 @@ function App() {
         </div>
 
         {error && (
-          <div style={{ 
+          <div style={{
             padding: '12px 16px',
             backgroundColor: '#fef2f2',
             border: '1px solid #fecaca',
             borderRadius: '8px',
             color: '#dc2626',
-            marginBottom: '20px'
+            marginBottom: '20px',
+            textAlign: 'center',
+            fontWeight: 500,
           }}>
             {error}
           </div>
         )}
 
         {result && (
-          <div style={{ 
+          <div style={{
             backgroundColor: '#f9fafb',
-            borderRadius: '12px',
-            padding: '24px',
+            borderRadius: '14px',
+            padding: '28px 20px',
             border: '1px solid #e5e7eb',
-            marginBottom: '32px'
+            marginBottom: '32px',
+            boxShadow: '0 2px 8px 0 rgba(59, 130, 246, 0.04)',
           }}>
-            <h2 style={{ 
-              fontSize: '1.5rem', 
-              fontWeight: '600', 
-              color: '#1f2937',
-              marginBottom: '20px'
+            <h2 style={{
+              fontSize: '1.3rem',
+              fontWeight: 700,
+              color: '#1e293b',
+              marginBottom: '18px',
+              letterSpacing: '-0.5px',
             }}>
               Analysis Results
             </h2>
-            
-            <div style={{ 
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '20px',
-              marginBottom: '20px'
+
+            <div style={{
+              display: 'flex',
+              gap: '18px',
+              marginBottom: '18px',
+              flexWrap: 'wrap',
             }}>
-              <div style={{ 
-                padding: '16px',
-                backgroundColor: 'white',
+              <div style={{
+                flex: 1,
+                minWidth: '120px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                background: '#fff',
                 borderRadius: '8px',
-                border: '1px solid #e5e7eb'
+                border: '1px solid #e5e7eb',
+                padding: '18px 0',
+                marginBottom: '8px',
               }}>
-                <p style={{ 
-                  margin: '0 0 8px 0',
-                  fontSize: '14px',
-                  color: '#6b7280',
-                  fontWeight: '500'
-                }}>
-                  Risk Level
-                </p>
-                <p style={{ 
-                  margin: '0',
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  color: getRiskColor(result.risk_level)
-                }}>
-                  {result.risk_level || 'Unknown'}
-                </p>
+                <span style={{
+                  fontSize: '13px',
+                  color: '#64748b',
+                  fontWeight: 500,
+                  marginBottom: '6px',
+                }}>Risk Level</span>
+                <span style={{
+                  display: 'inline-block',
+                  padding: '6px 18px',
+                  borderRadius: '999px',
+                  background: getRiskColor(result.risk_level) + '22',
+                  color: getRiskColor(result.risk_level),
+                  fontWeight: 700,
+                  fontSize: '1.1rem',
+                  letterSpacing: '-0.5px',
+                }}>{result.risk_level || 'Unknown'}</span>
               </div>
-              
-              <div style={{ 
-                padding: '16px',
-                backgroundColor: 'white',
+              <div style={{
+                flex: 1,
+                minWidth: '120px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                background: '#fff',
                 borderRadius: '8px',
-                border: '1px solid #e5e7eb'
+                border: '1px solid #e5e7eb',
+                padding: '18px 0',
+                marginBottom: '8px',
               }}>
-                <p style={{ 
-                  margin: '0 0 8px 0',
-                  fontSize: '14px',
-                  color: '#6b7280',
-                  fontWeight: '500'
-                }}>
-                  Risk Score
-                </p>
-                <p style={{ 
-                  margin: '0',
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  color: getRiskColor(result.risk_level)
-                }}>
-                  {typeof result.risk_score === 'number' ? (result.risk_score * 100).toFixed(1) + '%' : 'Unknown'}
-                </p>
+                <span style={{
+                  fontSize: '13px',
+                  color: '#64748b',
+                  fontWeight: 500,
+                  marginBottom: '6px',
+                }}>Risk Score</span>
+                <span style={{
+                  display: 'inline-block',
+                  padding: '6px 18px',
+                  borderRadius: '999px',
+                  background: '#f1f5f9',
+                  color: '#1e293b',
+                  fontWeight: 700,
+                  fontSize: '1.1rem',
+                  letterSpacing: '-0.5px',
+                }}>{typeof result.risk_score === 'number' ? (result.risk_score * 100).toFixed(1) + '%' : 'Unknown'}</span>
               </div>
             </div>
 
             {result.risk_factors && result.risk_factors.length > 0 && (
-              <div style={{ 
+              <div style={{
                 backgroundColor: 'white',
                 borderRadius: '8px',
                 padding: '16px',
                 border: '1px solid #e5e7eb',
-                marginBottom: '20px'
+                marginBottom: '20px',
               }}>
-                <p style={{ 
+                <p style={{
                   margin: '0 0 12px 0',
                   fontSize: '14px',
                   color: '#6b7280',
-                  fontWeight: '500'
+                  fontWeight: '500',
                 }}>
                   Risk Factors
                 </p>
-                <ul style={{ 
+                <ul style={{
                   margin: '0',
                   paddingLeft: '0',
-                  listStyle: 'none'
+                  listStyle: 'none',
                 }}>
                   {processRiskFactors(result.risk_factors).map((factor: string, index: number) => (
-                    <li key={index} style={{ 
+                    <li key={index} style={{
                       marginBottom: '4px',
                       color: '#374151',
                       fontSize: '14px',
                       paddingLeft: '12px',
-                      position: 'relative'
+                      position: 'relative',
                     }}>
                       <span style={{
                         position: 'absolute',
                         left: '2px',
-                        color: '#374151'
+                        color: '#374151',
                       }}>•</span>
                       {factor}
                     </li>
@@ -309,6 +333,9 @@ function App() {
               </div>
             )}
 
+            {/* Divider */}
+            {!doNotLog && <hr style={{ border: 'none', borderTop: '1px solid #e5e7eb', margin: '28px 0 18px 0' }} />}
+
             {/* Feedback Section */}
             {!doNotLog && (
               <div style={{
@@ -316,13 +343,13 @@ function App() {
                 borderRadius: '8px',
                 padding: '16px',
                 border: '1px solid #e5e7eb',
-                marginTop: '20px'
+                marginTop: '0',
               }}>
                 <p style={{
                   margin: '0 0 12px 0',
                   fontSize: '14px',
                   color: '#6b7280',
-                  fontWeight: '500'
+                  fontWeight: '500',
                 }}>
                   Was this analysis correct?
                 </p>
@@ -382,7 +409,7 @@ function App() {
                     padding: '8px',
                     fontSize: '14px',
                     marginBottom: '12px',
-                    resize: 'vertical'
+                    resize: 'vertical',
                   }}
                 />
                 <button
@@ -396,7 +423,7 @@ function App() {
                     fontSize: '15px',
                     fontWeight: '600',
                     cursor: 'pointer',
-                    marginBottom: '8px'
+                    marginBottom: '8px',
                   }}
                 >
                   Submit Feedback
