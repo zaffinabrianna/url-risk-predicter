@@ -32,38 +32,29 @@ async def health_check():
 
 
 @app.post("/analyze")
-async def analyze_url_endpoint(url: str = Form(...)):
-    """
-    Analyze a URL for potential threats.
-
-    Args:
-        url: The URL to analyze
-
-    Returns:
-        Complete analysis including redirect info, domain analysis, and risk score
-    """
-    try:
-        result = analyze_url(url)
-        return result
-    except Exception as e:
-        return {"error": f"Analysis failed: {str(e)}"}
+async def analyze_url_endpoint(
+    url: str = Form(...),
+    do_not_log: bool = Form(False)
+):
+    result = analyze_url(url)
+    if not do_not_log:
+        # TODO: Save analysis event to database here
+        print(f"Analysis logged for: {url}")
+    else:
+        print(f"Analysis NOT logged for: {url} (user opted out)")
+    return result
 
 
 @app.post("/feedback")
 async def submit_feedback(request: Request):
-    """
-    Receive user feedback for a URL analysis.
-    Expects JSON: { "url": "...", "user_vote": "...", "feedback": "..." }
-    """
     data = await request.json()
-    url = data.get("url")
-    user_vote = data.get("user_vote")
-    feedback = data.get("feedback")
-
-    # For now, just print the feedback (or you could save to a file/database)
+    do_not_log = data.get("do_not_log", False)
+    if do_not_log:
+        print(f"Feedback NOT logged for: {data.get('url')} (user opted out)")
+        return {"message": "Feedback not logged (user opted out)."}
+    # Otherwise, save feedback as before
     print(
-        f"Feedback received: url={url}, vote={user_vote}, comment={feedback}")
-
+        f"Feedback received: url={data.get('url')}, vote={data.get('user_vote')}, comment={data.get('feedback')}")
     return {"message": "Feedback received. Thank you!"}
 
 

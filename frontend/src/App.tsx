@@ -1,6 +1,17 @@
 import { useState } from 'react'
 import './App.css'
 
+function processRiskFactors(riskFactors: string[]) {
+  // If any risk factor contains "Brand similarity", replace all with one generic message
+  if (riskFactors.some(f => f.toLowerCase().includes("brand similarity"))) {
+    return [
+      ...riskFactors.filter(f => !f.toLowerCase().includes("brand similarity")),
+      "Popular brand similarity"
+    ];
+  }
+  return riskFactors;
+}
+
 function App() {
   const [url, setUrl] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -106,7 +117,7 @@ function App() {
             color: '#1f2937',
             marginBottom: '8px'
           }}>
-            🔒 LinkShield
+            LinkShield
           </h1>
           <p style={{ 
             fontSize: '1.1rem', 
@@ -278,7 +289,7 @@ function App() {
                   paddingLeft: '0',
                   listStyle: 'none'
                 }}>
-                  {result.risk_factors.map((factor: string, index: number) => (
+                  {processRiskFactors(result.risk_factors).map((factor: string, index: number) => (
                     <li key={index} style={{ 
                       marginBottom: '4px',
                       color: '#374151',
@@ -299,104 +310,104 @@ function App() {
             )}
 
             {/* Feedback Section */}
-            <div style={{
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              padding: '16px',
-              border: '1px solid #e5e7eb',
-              marginTop: '20px',
-              opacity: doNotLog ? 0.5 : 1,
-              pointerEvents: doNotLog ? 'none' : 'auto'
-            }}>
-              <p style={{
-                margin: '0 0 12px 0',
-                fontSize: '14px',
-                color: '#6b7280',
-                fontWeight: '500'
+            {!doNotLog && (
+              <div style={{
+                backgroundColor: 'white',
+                borderRadius: '8px',
+                padding: '16px',
+                border: '1px solid #e5e7eb',
+                marginTop: '20px'
               }}>
-                Was this analysis correct?
-              </p>
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
-                <button
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    border: vote === 'Malicious' ? '2px solid #ef4444' : '1px solid #e5e7eb',
-                    backgroundColor: vote === 'Malicious' ? '#fee2e2' : 'white',
-                    color: '#ef4444',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => setVote('Malicious')}
-                >
-                  Malicious
-                </button>
-                <button
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    border: vote === 'Safe' ? '2px solid #10b981' : '1px solid #e5e7eb',
-                    backgroundColor: vote === 'Safe' ? '#d1fae5' : 'white',
-                    color: '#10b981',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => setVote('Safe')}
-                >
-                  Safe
-                </button>
-                <button
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    border: vote === 'Unsure' ? '2px solid #f59e0b' : '1px solid #e5e7eb',
-                    backgroundColor: vote === 'Unsure' ? '#fef3c7' : 'white',
-                    color: '#f59e0b',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => setVote('Unsure')}
-                >
-                  Unsure
-                </button>
-              </div>
-              <textarea
-                placeholder="Optional comment..."
-                value={feedback}
-                onChange={e => setFeedback(e.target.value)}
-                style={{
-                  width: '100%',
-                  minHeight: '48px',
-                  borderRadius: '6px',
-                  border: '1px solid #e5e7eb',
-                  padding: '8px',
+                <p style={{
+                  margin: '0 0 12px 0',
                   fontSize: '14px',
-                  marginBottom: '12px',
-                  resize: 'vertical'
-                }}
-              />
-              <button
-                onClick={submitFeedback}
-                style={{
-                  padding: '10px 24px',
-                  backgroundColor: '#3b82f6',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '15px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  marginBottom: '8px'
-                }}
-              >
-                Submit Feedback
-              </button>
-              {feedbackStatus && (
-                <div style={{ color: feedbackStatus.includes('Thank') ? '#10b981' : '#ef4444', marginTop: '8px', fontSize: '14px' }}>
-                  {feedbackStatus}
+                  color: '#6b7280',
+                  fontWeight: '500'
+                }}>
+                  Was this analysis correct?
+                </p>
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+                  <button
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: vote === 'Malicious' ? '2px solid #ef4444' : '1px solid #e5e7eb',
+                      backgroundColor: vote === 'Malicious' ? '#fee2e2' : 'white',
+                      color: '#ef4444',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => setVote('Malicious')}
+                  >
+                    Malicious
+                  </button>
+                  <button
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: vote === 'Safe' ? '2px solid #10b981' : '1px solid #e5e7eb',
+                      backgroundColor: vote === 'Safe' ? '#d1fae5' : 'white',
+                      color: '#10b981',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => setVote('Safe')}
+                  >
+                    Safe
+                  </button>
+                  <button
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: vote === 'Unsure' ? '2px solid #f59e0b' : '1px solid #e5e7eb',
+                      backgroundColor: vote === 'Unsure' ? '#fef3c7' : 'white',
+                      color: '#f59e0b',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => setVote('Unsure')}
+                  >
+                    Unsure
+                  </button>
                 </div>
-              )}
-            </div>
+                <textarea
+                  placeholder="Optional comment..."
+                  value={feedback}
+                  onChange={e => setFeedback(e.target.value)}
+                  style={{
+                    width: '100%',
+                    minHeight: '48px',
+                    borderRadius: '6px',
+                    border: '1px solid #e5e7eb',
+                    padding: '8px',
+                    fontSize: '14px',
+                    marginBottom: '12px',
+                    resize: 'vertical'
+                  }}
+                />
+                <button
+                  onClick={submitFeedback}
+                  style={{
+                    padding: '10px 24px',
+                    backgroundColor: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    marginBottom: '8px'
+                  }}
+                >
+                  Submit Feedback
+                </button>
+                {feedbackStatus && (
+                  <div style={{ color: feedbackStatus.includes('Thank') ? '#10b981' : '#ef4444', marginTop: '8px', fontSize: '14px' }}>
+                    {feedbackStatus}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
