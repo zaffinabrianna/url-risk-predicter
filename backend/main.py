@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Form
+from fastapi import FastAPI, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from utils.url_analyzer import analyze_url
@@ -47,6 +47,24 @@ async def analyze_url_endpoint(url: str = Form(...)):
         return result
     except Exception as e:
         return {"error": f"Analysis failed: {str(e)}"}
+
+
+@app.post("/feedback")
+async def submit_feedback(request: Request):
+    """
+    Receive user feedback for a URL analysis.
+    Expects JSON: { "url": "...", "user_vote": "...", "feedback": "..." }
+    """
+    data = await request.json()
+    url = data.get("url")
+    user_vote = data.get("user_vote")
+    feedback = data.get("feedback")
+
+    # For now, just print the feedback (or you could save to a file/database)
+    print(
+        f"Feedback received: url={url}, vote={user_vote}, comment={feedback}")
+
+    return {"message": "Feedback received. Thank you!"}
 
 
 if __name__ == "__main__":

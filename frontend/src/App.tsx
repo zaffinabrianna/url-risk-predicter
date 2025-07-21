@@ -6,6 +6,9 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
   const [error, setError] = useState('')
+  const [feedback, setFeedback] = useState('')
+  const [vote, setVote] = useState('')
+  const [feedbackStatus, setFeedbackStatus] = useState('')
 
   const analyzeUrl = async () => {
     if (!url) return
@@ -13,6 +16,9 @@ function App() {
     setIsLoading(true)
     setError('')
     setResult(null)
+    setFeedback('')
+    setVote('')
+    setFeedbackStatus('')
 
     try {
       const response = await fetch('http://localhost:8000/analyze', {
@@ -29,6 +35,36 @@ function App() {
       setError('Failed to analyze URL. Please try again.')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const submitFeedback = async () => {
+    if (!vote) {
+      setFeedbackStatus('Please select a vote.');
+      return;
+    }
+    setFeedbackStatus('')
+    try {
+      const response = await fetch('http://localhost:8000/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: url,
+          user_vote: vote,
+          feedback: feedback,
+        })
+      })
+      if (response.ok) {
+        setFeedbackStatus('Thank you for your feedback!')
+        setVote('')
+        setFeedback('')
+      } else {
+        setFeedbackStatus('Failed to submit feedback.')
+      }
+    } catch (err) {
+      setFeedbackStatus('Failed to submit feedback.')
     }
   }
 
@@ -140,7 +176,8 @@ function App() {
             backgroundColor: '#f9fafb',
             borderRadius: '12px',
             padding: '24px',
-            border: '1px solid #e5e7eb'
+            border: '1px solid #e5e7eb',
+            marginBottom: '32px'
           }}>
             <h2 style={{ 
               fontSize: '1.5rem', 
@@ -211,7 +248,8 @@ function App() {
                 backgroundColor: 'white',
                 borderRadius: '8px',
                 padding: '16px',
-                border: '1px solid #e5e7eb'
+                border: '1px solid #e5e7eb',
+                marginBottom: '20px'
               }}>
                 <p style={{ 
                   margin: '0 0 12px 0',
@@ -245,6 +283,104 @@ function App() {
                 </ul>
               </div>
             )}
+
+            {/* Feedback Section */}
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              padding: '16px',
+              border: '1px solid #e5e7eb',
+              marginTop: '20px'
+            }}>
+              <p style={{
+                margin: '0 0 12px 0',
+                fontSize: '14px',
+                color: '#6b7280',
+                fontWeight: '500'
+              }}>
+                Was this analysis correct?
+              </p>
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+                <button
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    border: vote === 'Malicious' ? '2px solid #ef4444' : '1px solid #e5e7eb',
+                    backgroundColor: vote === 'Malicious' ? '#fee2e2' : 'white',
+                    color: '#ef4444',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => setVote('Malicious')}
+                >
+                  Malicious
+                </button>
+                <button
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    border: vote === 'Safe' ? '2px solid #10b981' : '1px solid #e5e7eb',
+                    backgroundColor: vote === 'Safe' ? '#d1fae5' : 'white',
+                    color: '#10b981',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => setVote('Safe')}
+                >
+                  Safe
+                </button>
+                <button
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    border: vote === 'Unsure' ? '2px solid #f59e0b' : '1px solid #e5e7eb',
+                    backgroundColor: vote === 'Unsure' ? '#fef3c7' : 'white',
+                    color: '#f59e0b',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => setVote('Unsure')}
+                >
+                  Unsure
+                </button>
+              </div>
+              <textarea
+                placeholder="Optional comment..."
+                value={feedback}
+                onChange={e => setFeedback(e.target.value)}
+                style={{
+                  width: '100%',
+                  minHeight: '48px',
+                  borderRadius: '6px',
+                  border: '1px solid #e5e7eb',
+                  padding: '8px',
+                  fontSize: '14px',
+                  marginBottom: '12px',
+                  resize: 'vertical'
+                }}
+              />
+              <button
+                onClick={submitFeedback}
+                style={{
+                  padding: '10px 24px',
+                  backgroundColor: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  marginBottom: '8px'
+                }}
+              >
+                Submit Feedback
+              </button>
+              {feedbackStatus && (
+                <div style={{ color: feedbackStatus.includes('Thank') ? '#10b981' : '#ef4444', marginTop: '8px', fontSize: '14px' }}>
+                  {feedbackStatus}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
