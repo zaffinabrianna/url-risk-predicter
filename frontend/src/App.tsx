@@ -37,9 +37,12 @@ function App() {
       const response = await fetch('http://localhost:8000/analyze', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
         },
-        body: `url=${encodeURIComponent(urlToAnalyze)}&do_not_log=${doNotLog}`
+        body: JSON.stringify({
+          url: urlToAnalyze,
+          do_not_log: doNotLog
+        })
       })
       const data = await response.json()
       setResult(data)

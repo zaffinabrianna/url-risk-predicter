@@ -1,5 +1,6 @@
-from fastapi import FastAPI, Form, Request
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, HttpUrl, constr, validator
 from datetime import datetime
 from utils.url_analyzer import analyze_url
 
@@ -18,6 +19,31 @@ app.add_middleware(
 )
 
 
+class AnalyzeRequest(BaseModel):
+    url: HttpUrl
+    do_not_log: bool = False
+
+
+class FeedbackRequest(BaseModel):
+    url: HttpUrl
+    user_vote: str
+    feedback: constr(max_length=500) = None
+    do_not_log: bool = False
+
+    @validator('user_vote')
+    def vote_must_be_valid(cls, v):
+        allowed = {"Malicious", "Safe", "Unsure"}
+        if v not in allowed:
+            raise ValueError(f"user_vote must be one of {allowed}")
+        return v
+
+    @validator('feedback')
+    def feedback_no_scripts(cls, v):
+        if v and ("<script" in v.lower() or "</script" in v.lower()):
+            raise ValueError("Feedback must not contain scripts.")
+        return v
+
+
 @app.get("/")
 async def root():
     return {"message": "Project API - Smart Malicious URL Checker"}
@@ -32,10 +58,9 @@ async def health_check():
 
 
 @app.post("/analyze")
-async def analyze_url_endpoint(
-    url: str = Form(...),
-    do_not_log: bool = Form(False)
-):
+async def analyze_url_endpoint(request: AnalyzeRequest):
+    url = str(request.url)
+    do_not_log = request.do_not_log
     result = analyze_url(url)
     if not do_not_log:
         # TODO: Save analysis event to database here
@@ -46,17 +71,13 @@ async def analyze_url_endpoint(
 
 
 @app.post("/feedback")
-async def submit_feedback(request: Request):
-    data = await request.json()
-    do_not_log = data.get("do_not_log", False)
-    if do_not_log:
-        print(f"Feedback NOT logged for: {data.get('url')} (user opted out)")
+async def submit_feedback(request: FeedbackRequest):
+    if request.do_not_log:
+        print(f"Feedback NOT logged for: {request.url} (user opted out)")
         return {"message": "Feedback not logged (user opted out)."}
-    # Otherwise, save feedback as before
     print(
-        f"Feedback received: url={data.get('url')}, vote={data.get('user_vote')}, comment={data.get('feedback')}")
+        f"Feedback received: url={request.url}, vote={request.user_vote}, comment={request.feedback}")
     return {"message": "Feedback received. Thank you!"}
-
 
 if __name__ == "__main__":
     import uvicorn
