@@ -100,15 +100,30 @@ function App() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: 'radial-gradient(circle at center, #e0e7ff 0%, #f3f4f6 70%, #fff 100%)',
-        fontFamily: 'Inter, Segoe UI, Arial, sans-serif',
-        padding: '0',
-        margin: '0',
-      }}
-    >
+    <>
+      {isLoading && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(255,255,255,0.6)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{
+            width: 48,
+            height: 48,
+            border: '6px solid #e5e7eb',
+            borderTop: '6px solid #6366f1',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }} />
+          <style>
+            {`@keyframes spin { 100% { transform: rotate(360deg); } }`}
+          </style>
+        </div>
+      )}
       <div
         style={{
           maxWidth: '700px',
@@ -445,7 +460,7 @@ function App() {
           </div>
         )}
       </div>
-    </div>
+    </>
   )
 }
 
