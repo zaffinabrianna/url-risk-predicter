@@ -11,6 +11,23 @@ function processRiskFactors(riskFactors: string[]) {
   return riskFactors;
 }
 
+function isValidUrlFormat(str: string) {
+  try {
+    // Prepend https:// if missing
+    const testStr = str.startsWith('http://') || str.startsWith('https://') ? str : 'https://' + str;
+    const url = new URL(testStr);
+    // Must be http/https, have at least one dot, and a valid hostname
+    return (
+      (url.protocol === 'http:' || url.protocol === 'https:') &&
+      url.hostname.includes('.') &&
+      !url.hostname.startsWith('.') &&
+      !url.hostname.endsWith('.')
+    );
+  } catch {
+    return false;
+  }
+}
+
 function App() {
   const [url, setUrl] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -22,17 +39,24 @@ function App() {
   const [doNotLog, setDoNotLog] = useState(false)
 
   const analyzeUrl = async () => {
-    if (!url) return;
-    let urlToAnalyze = url;
+    setError('');
+    setResult(null);
+    setFeedback('');
+    setVote('');
+    setFeedbackStatus('');
+    if (!url.trim()) {
+      setError('Please enter a URL to analyze.');
+      return;
+    }
+    if (!isValidUrlFormat(url.trim())) {
+      setError('Please enter a valid URL (e.g., https://example.com).');
+      return;
+    }
+    let urlToAnalyze = url.trim();
     if (!/^https?:\/\//i.test(urlToAnalyze)) {
       urlToAnalyze = 'https://' + urlToAnalyze;
     }
-    setIsLoading(true)
-    setError('')
-    setResult(null)
-    setFeedback('')
-    setVote('')
-    setFeedbackStatus('')
+    setIsLoading(true);
     try {
       const response = await fetch('http://localhost:8000/analyze', {
         method: 'POST',
@@ -43,22 +67,40 @@ function App() {
           url: urlToAnalyze,
           do_not_log: doNotLog
         })
-      })
-      const data = await response.json()
-      setResult(data)
+      });
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        setError('An unexpected error occurred. Please try again later.');
+        return;
+      }
+      if (!response.ok) {
+        setError(data.detail || 'An unexpected error occurred. Please try again later.');
+        return;
+      }
+      setResult(data);
     } catch (err) {
-      setError('Failed to analyze URL. Please try again.')
+      setError('Unable to connect to the server. Please check your connection and try again.');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
   const submitFeedback = async () => {
+    setFeedbackStatus('');
     if (!vote) {
-      setFeedbackStatus('Please select a vote.');
+      setFeedbackStatus('Please select whether the analysis was correct.');
       return;
     }
-    setFeedbackStatus('')
+    if (feedback.length > 500) {
+      setFeedbackStatus('Feedback must be 500 characters or less.');
+      return;
+    }
+    if (/<script>/i.test(feedback)) {
+      setFeedbackStatus('Feedback cannot contain script tags.');
+      return;
+    }
     try {
       const response = await fetch('http://localhost:8000/feedback', {
         method: 'POST',
@@ -71,16 +113,23 @@ function App() {
           feedback: feedback,
           do_not_log: doNotLog
         })
-      })
-      if (response.ok) {
-        setFeedbackStatus('Thank you for your feedback!')
-        setVote('')
-        setFeedback('')
-      } else {
-        setFeedbackStatus('Failed to submit feedback.')
+      });
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        setFeedbackStatus('An unexpected error occurred. Please try again later.');
+        return;
       }
+      if (!response.ok) {
+        setFeedbackStatus(data.detail || 'An unexpected error occurred. Please try again later.');
+        return;
+      }
+      setFeedbackStatus('Thank you for your feedback!');
+      setVote('');
+      setFeedback('');
     } catch (err) {
-      setFeedbackStatus('Failed to submit feedback.')
+      setFeedbackStatus('Unable to connect to the server. Please check your connection and try again.');
     }
   }
 
