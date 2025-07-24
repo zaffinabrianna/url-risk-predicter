@@ -12,6 +12,7 @@ function processRiskFactors(riskFactors: string[]) {
 }
 
 function isValidUrlFormat(str: string) {
+  if (str.includes(' ')) return false;
   try {
     // Prepend https:// if missing
     const testStr = str.startsWith('http://') || str.startsWith('https://') ? str : 'https://' + str;
@@ -46,6 +47,10 @@ function App() {
     setFeedbackStatus('');
     if (!url.trim()) {
       setError('Please enter a URL to analyze.');
+      return;
+    }
+    if (url.includes(' ')) {
+      setError('URL cannot contain spaces.');
       return;
     }
     if (!isValidUrlFormat(url.trim())) {
