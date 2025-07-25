@@ -108,6 +108,11 @@ function App() {
       return;
     }
     setFeedbackLoading(true);
+    // Ensure URL has protocol
+    let urlToSend = url.trim();
+    if (!/^https?:\/\//i.test(urlToSend)) {
+      urlToSend = 'https://' + urlToSend;
+    }
     try {
       const response = await fetch('http://localhost:8000/feedback', {
         method: 'POST',
@@ -115,7 +120,7 @@ function App() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          url: url,
+          url: urlToSend,
           user_vote: vote,
           feedback: feedback,
           do_not_log: doNotLog
