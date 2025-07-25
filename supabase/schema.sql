@@ -1,5 +1,5 @@
 -- Table to store every analysis event
-CREATE TABLE analysis_events (
+CREATE TABLE analyses (
     id SERIAL PRIMARY KEY,
     url TEXT NOT NULL,
     risk_score FLOAT,
@@ -8,10 +8,10 @@ CREATE TABLE analysis_events (
     analyzed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Table to store user feedback linked to an analysis event
+-- Table to store user feedback
 CREATE TABLE feedback (
     id SERIAL PRIMARY KEY,
-    analysis_event_id INTEGER REFERENCES analysis_events(id),
+    url TEXT NOT NULL,
     user_vote TEXT NOT NULL, -- 'Malicious', 'Safe', 'Unsure'
     feedback TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

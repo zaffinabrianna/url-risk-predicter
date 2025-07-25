@@ -15,3 +15,4 @@ dnspython==2.4.2
 tldextract==5.1.1
 python-whois==0.8.0
 cryptography==41.0.8 
+asyncpg 

@@ -38,6 +38,7 @@ function App() {
   const [vote, setVote] = useState('')
   const [feedbackStatus, setFeedbackStatus] = useState('')
   const [doNotLog, setDoNotLog] = useState(false)
+  const [feedbackLoading, setFeedbackLoading] = useState(false)
 
   const analyzeUrl = async () => {
     setError('');
@@ -106,6 +107,7 @@ function App() {
       setFeedbackStatus('Feedback cannot contain script tags.');
       return;
     }
+    setFeedbackLoading(true);
     try {
       const response = await fetch('http://localhost:8000/feedback', {
         method: 'POST',
@@ -135,6 +137,8 @@ function App() {
       setFeedback('');
     } catch (err) {
       setFeedbackStatus('Unable to connect to the server. Please check your connection and try again.');
+    } finally {
+      setFeedbackLoading(false);
     }
   }
 
@@ -498,11 +502,13 @@ function App() {
                     borderRadius: '8px',
                     fontSize: '15px',
                     fontWeight: '600',
-                    cursor: 'pointer',
+                    cursor: feedbackLoading ? 'not-allowed' : 'pointer',
                     marginBottom: '8px',
+                    opacity: feedbackLoading ? 0.7 : 1,
                   }}
+                  disabled={feedbackLoading}
                 >
-                  Submit Feedback
+                  {feedbackLoading ? 'Submitting...' : 'Submit Feedback'}
                 </button>
                 {feedbackStatus && (
                   <div style={{ color: feedbackStatus.includes('Thank') ? '#10b981' : '#ef4444', marginTop: '8px', fontSize: '14px' }}>

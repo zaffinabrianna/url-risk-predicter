@@ -3,6 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, HttpUrl, constr, validator
 from datetime import datetime
 from utils.url_analyzer import analyze_url
+import os
+import asyncpg
+from dotenv import load_dotenv
 
 app = FastAPI(
     title="API for project",
@@ -17,6 +20,33 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
+DATABASE_URL = os.getenv('SUPABASE_DB_URL')
+
+
+async def save_analysis_event(url, risk_score, risk_level, risk_factors):
+    try:
+        conn = await asyncpg.connect(DATABASE_URL)
+        await conn.execute(
+            'INSERT INTO analyses (url, risk_score, risk_level, risk_factors) VALUES ($1, $2, $3, $4)',
+            url, risk_score, risk_level, risk_factors
+        )
+        await conn.close()
+    except Exception as e:
+        print(f"[DB] Failed to save analysis: {e}")
+
+
+async def save_feedback(url, user_vote, feedback):
+    try:
+        conn = await asyncpg.connect(DATABASE_URL)
+        await conn.execute(
+            'INSERT INTO feedback (url, user_vote, feedback) VALUES ($1, $2, $3)',
+            url, user_vote, feedback
+        )
+        await conn.close()
+    except Exception as e:
+        print(f"[DB] Failed to save feedback: {e}")
 
 
 class AnalyzeRequest(BaseModel):
@@ -63,7 +93,14 @@ async def analyze_url_endpoint(request: AnalyzeRequest):
     do_not_log = request.do_not_log
     result = analyze_url(url)
     if not do_not_log:
-        # TODO: Save analysis event to database here
+        # Save analysis event to database
+        await save_analysis_event(
+            url,
+            result.get('risk_score'),
+            result.get('risk_level'),
+            ', '.join(result.get('risk_factors', [])) if result.get(
+                'risk_factors') else None
+        )
         print(f"Analysis logged for: {url}")
     else:
         print(f"Analysis NOT logged for: {url} (user opted out)")
@@ -75,6 +112,8 @@ async def submit_feedback(request: FeedbackRequest):
     if request.do_not_log:
         print(f"Feedback NOT logged for: {request.url} (user opted out)")
         return {"message": "Feedback not logged (user opted out)."}
+    # Save feedback to database
+    await save_feedback(str(request.url), request.user_vote, request.feedback)
     print(
         f"Feedback received: url={request.url}, vote={request.user_vote}, comment={request.feedback}")
     return {"message": "Feedback received. Thank you!"}
