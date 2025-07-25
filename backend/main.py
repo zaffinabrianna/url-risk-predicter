@@ -7,6 +7,9 @@ import os
 import asyncpg
 from dotenv import load_dotenv
 
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
+DATABASE_URL = os.getenv('SUPABASE_DB_URL')
+
 app = FastAPI(
     title="API for project",
     description="Malicious URL Detection API",
@@ -20,9 +23,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
-DATABASE_URL = os.getenv('SUPABASE_DB_URL')
 
 
 async def save_analysis_event(url, risk_score, risk_level, risk_factors):
