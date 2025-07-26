@@ -64,9 +64,4 @@ npm run dev
 ## Contributing
 Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
 
-## License
-[MIT](LICENSE)
-
 ---
-
-> **Developed as a portfolio project to demonstrate full-stack engineering, machine learning, and cybersecurity skills.
