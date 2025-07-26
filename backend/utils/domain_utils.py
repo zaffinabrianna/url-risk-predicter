@@ -1,128 +1,162 @@
-from typing import Dict, Any
+import re
 import math
-import difflib
-from urllib.parse import urlparse
+from typing import Dict, Any, List
+from .url_utils import extract_domain
 
+# Suspicious TLDs commonly used in phishing
+SUSPICIOUS_TLDS = {
+    'tk', 'ml', 'ga', 'cf', 'gq', 'xyz', 'top', 'site', 'online', 'click',
+    'link', 'live', 'space', 'website', 'tech', 'digital', 'app', 'web'
+}
 
-SUSPICIOUS_TLDS = ['.xyz', '.top', '.tk',
-                   '.ml', '.ga', '.cf', '.gq', '.zip', '.mov']
+# Suspicious keywords often found in malicious domains
 SUSPICIOUS_KEYWORDS = [
-    'secure', 'login', 'signin', 'account', 'verify', 'confirm',
-    'update', 'bank', 'paypal', 'amazon', 'google', 'facebook',
-    'microsoft', 'apple', 'netflix', 'spotify', 'ebay', 'pay'
+    'secure', 'login', 'verify', 'update', 'confirm', 'account', 'bank',
+    'paypal', 'google', 'facebook', 'amazon', 'apple', 'microsoft',
+    'netflix', 'spotify', 'dropbox', 'onedrive', 'icloud'
 ]
-KNOWN_BRANDS = [
-    'paypal', 'google', 'facebook', 'amazon', 'microsoft',
-    'apple', 'netflix', 'spotify', 'ebay', 'yahoo', 'twitter'
+
+# Popular brands for similarity checking
+POPULAR_BRANDS = [
+    'google', 'facebook', 'amazon', 'apple', 'microsoft', 'netflix',
+    'paypal', 'ebay', 'linkedin', 'twitter', 'instagram', 'youtube',
+    'dropbox', 'spotify', 'uber', 'airbnb', 'stripe', 'shopify'
 ]
-BIT_SQUAT_CHARS = ['1', '0', '5', '3', '8']
-ZERO_WIDTH_CHARS = ['\u200b', '\u200c', '\u200d', '\u2060']
 
 
 def analyze_domain(url: str) -> Dict[str, Any]:
     """
-    Analyze domain for suspicious patterns.
+    Analyze domain for suspicious characteristics.
 
     Args:
-        url: The URL to analyze
+        url: URL to analyze
 
     Returns:
-        Dictionary with domain analysis:
-        - domain: The domain name
-        - tld: Top-level domain
-        - suspicious_tld: Boolean
-        - suspicious_keywords: List of suspicious keywords found
-        - entropy_score: Domain entropy
-        - length: Domain length
+        Dictionary with domain analysis results
     """
-    parsed = urlparse(url)
-    domain = parsed.netloc.split(':')[0]
-    domain_lower = domain.lower().strip()
+    domain = extract_domain(url)
 
-    analysis = {
-        "domain": domain_lower,
-        "tld": domain_lower.split('.')[-1] if '.' in domain_lower else '',
-        "suspicious_tld": any(domain_lower.endswith(tld) for tld in SUSPICIOUS_TLDS),
-        "entropy_score": calculate_entropy(domain_lower),
-        "length": len(domain_lower),
-        "similarity_attacks": detect_similarity_attacks(domain_lower),
-        "brand_similarity": check_brand_similarity(domain_lower)
+    return {
+        'domain': domain,
+        'suspicious_tld': check_suspicious_tld(domain),
+        'suspicious_keywords': check_suspicious_keywords(domain),
+        'entropy_score': calculate_entropy(domain),
+        'similarity_attacks': detect_similarity_attacks(domain),
+        'brand_similarity': check_brand_similarity(domain),
+        'domain_age': None,  # Would need WHOIS lookup for real implementation
+        'length': len(domain)
     }
 
-    suspicious = []
-    for kw in SUSPICIOUS_KEYWORDS:
-        if kw in domain_lower:
-            if kw in KNOWN_BRANDS:
-                # only flag brand if it's NOT exactly kw.com
-                if domain_lower != f"{kw}.com":
-                    suspicious.append(kw)
-            else:
-                suspicious.append(kw)
-    analysis["suspicious_keywords"] = suspicious
 
-    return analysis
+def check_suspicious_tld(domain: str) -> bool:
+    """Check if domain uses suspicious TLD."""
+    tld = domain.split('.')[-1].lower()
+    return tld in SUSPICIOUS_TLDS
 
 
-def calculate_entropy(domain: str) -> float:
-    """
-    Calculate entropy of a domain.
-    """
-    if not domain:
+def check_suspicious_keywords(domain: str) -> List[str]:
+    """Check for suspicious keywords in domain."""
+    found_keywords = []
+    domain_lower = domain.lower()
+
+    for keyword in SUSPICIOUS_KEYWORDS:
+        if keyword in domain_lower:
+            found_keywords.append(keyword)
+
+    return found_keywords
+
+
+def calculate_entropy(text: str) -> float:
+    """Calculate Shannon entropy of text."""
+    if not text:
         return 0.0
 
-    freq = {}
-    for c in domain:
-        freq[c] = freq.get(c, 0) + 1
+    # Count character frequencies
+    char_count = {}
+    for char in text:
+        char_count[char] = char_count.get(char, 0) + 1
 
+    # Calculate entropy
     entropy = 0.0
-    for count in freq.values():
-        p = count / len(domain)
-        entropy -= p * math.log2(p)
+    length = len(text)
+
+    for count in char_count.values():
+        probability = count / length
+        entropy -= probability * math.log2(probability)
+
     return entropy
 
 
 def detect_similarity_attacks(domain: str) -> Dict[str, bool]:
-    """
-    Detect various similarity-based attacks.
-    """
-    attacks = {
-        "homograph": any(ord(c) > 127 for c in domain),
-        "punycode": domain.startswith("xn--"),
-        "bit_squatting": any(ch in domain for ch in BIT_SQUAT_CHARS),
-        "combosquatting": '-' in domain,
-        "zero_width": any(ch in domain for ch in ZERO_WIDTH_CHARS),
+    """Detect various similarity-based attacks."""
+    domain_lower = domain.lower()
+
+    return {
+        'punycode': detect_punycode(domain),
+        'bit_squatting': detect_bit_squatting(domain_lower),
+        'combosquatting': detect_combosquatting(domain_lower)
     }
 
-    return attacks
+
+def detect_punycode(domain: str) -> bool:
+    """Detect punycode encoding (IDN homograph attacks)."""
+    return 'xn--' in domain
 
 
-def check_brand_similarity(domain: str) -> dict:
-    """
-    Check similarity to known brands, but do NOT flag if domain is the official brand domain.
-    """
-    known_brands = [
-        'paypal', 'google', 'facebook', 'amazon', 'microsoft',
-        'apple', 'netflix', 'spotify', 'ebay', 'yahoo', 'twitter'
-    ]
-    official_brand_domains = [
-        'paypal.com', 'google.com', 'facebook.com', 'amazon.com', 'microsoft.com',
-        'apple.com', 'netflix.com', 'spotify.com', 'ebay.com', 'yahoo.com', 'twitter.com'
-    ]
+def detect_bit_squatting(domain: str) -> bool:
+    """Detect bit-squatting attacks (similar domains with bit flips)."""
+    # This is a simplified version - real implementation would need
+    # more sophisticated character similarity analysis
+    suspicious_chars = ['0', '1', 'l', 'i', 'o']
+    return any(char in domain for char in suspicious_chars)
+
+
+def detect_combosquatting(domain: str) -> bool:
+    """Detect combosquatting (combining brand names with other words)."""
+    domain_parts = domain.split('.')[0].split('-')
+
+    for brand in POPULAR_BRANDS:
+        if brand in domain_parts:
+            # Check if there are other parts besides the brand
+            other_parts = [part for part in domain_parts if part != brand]
+            if other_parts:
+                return True
+
+    return False
+
+
+def check_brand_similarity(domain: str) -> Dict[str, bool]:
+    """Check for similarity to popular brands."""
     domain_lower = domain.lower()
     similarities = {}
-    for brand in known_brands:
-        official_domain = f"{brand}.com"
-        # Only flag as similar if not the official brand domain
-        if domain_lower == official_domain:
-            similarities[brand] = False
-        elif brand in domain_lower or domain_lower in brand:
+
+    for brand in POPULAR_BRANDS:
+        # Simple similarity check - could be enhanced with edit distance
+        if brand in domain_lower or domain_lower in brand:
             similarities[brand] = True
         else:
-            # Check for character substitutions (simple similarity)
-            similarity_score = calculate_string_similarity(domain_lower, brand)
-            similarities[brand] = similarity_score > 0.7 and domain_lower != official_domain
+            # Check for common typos or variations
+            if len(brand) > 3 and any(brand[i:i+3] in domain_lower for i in range(len(brand)-2)):
+                similarities[brand] = True
+            else:
+                similarities[brand] = False
+
     return similarities
 
 
-def calculate_string_similarity(str1: str, str2: str) -> float:
-    return difflib.SequenceMatcher(None, str1, str2).ratio()
+def get_domain_age(domain: str) -> int:
+    """
+    Get domain age in days.
+    This would require WHOIS lookup in a real implementation.
+    """
+    # Placeholder - would need to implement WHOIS lookup
+    return None
+
+
+def calculate_domain_reputation(domain: str) -> float:
+    """
+    Calculate domain reputation score.
+    This would integrate with reputation services in a real implementation.
+    """
+    # Placeholder - would need to integrate with reputation APIs
+    return 0.5

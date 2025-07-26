@@ -4,7 +4,7 @@ from pydantic import BaseModel, HttpUrl, constr, validator
 from datetime import datetime
 from utils.url_analyzer import analyze_url
 import os
-import asyncpg
+import psycopg2
 from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
@@ -25,26 +25,32 @@ app.add_middleware(
 )
 
 
-async def save_analysis_event(url, risk_score, risk_level, risk_factors):
+def save_analysis_event(url, risk_score, risk_level, risk_factors):
     try:
-        conn = await asyncpg.connect(DATABASE_URL)
-        await conn.execute(
-            'INSERT INTO analyses (url, risk_score, risk_level, risk_factors) VALUES ($1, $2, $3, $4)',
-            url, risk_score, risk_level, risk_factors
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+        cur.execute(
+            'INSERT INTO analyses (url, risk_score, risk_level, risk_factors) VALUES (%s, %s, %s, %s)',
+            (url, risk_score, risk_level, risk_factors)
         )
-        await conn.close()
+        conn.commit()
+        cur.close()
+        conn.close()
     except Exception as e:
         print(f"[DB] Failed to save analysis: {e}")
 
 
-async def save_feedback(url, user_vote, feedback):
+def save_feedback(url, user_vote, feedback):
     try:
-        conn = await asyncpg.connect(DATABASE_URL)
-        await conn.execute(
-            'INSERT INTO feedback (url, user_vote, feedback) VALUES ($1, $2, $3)',
-            url, user_vote, feedback
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+        cur.execute(
+            'INSERT INTO feedback (url, user_vote, feedback) VALUES (%s, %s, %s)',
+            (url, user_vote, feedback)
         )
-        await conn.close()
+        conn.commit()
+        cur.close()
+        conn.close()
     except Exception as e:
         print(f"[DB] Failed to save feedback: {e}")
 
@@ -94,7 +100,7 @@ async def analyze_url_endpoint(request: AnalyzeRequest):
     result = analyze_url(url)
     if not do_not_log:
         # Save analysis event to database
-        await save_analysis_event(
+        save_analysis_event(
             url,
             result.get('risk_score'),
             result.get('risk_level'),
@@ -113,7 +119,7 @@ async def submit_feedback(request: FeedbackRequest):
         print(f"Feedback NOT logged for: {request.url} (user opted out)")
         return {"message": "Feedback not logged (user opted out)."}
     # Save feedback to database
-    await save_feedback(str(request.url), request.user_vote, request.feedback)
+    save_feedback(str(request.url), request.user_vote, request.feedback)
     print(
         f"Feedback received: url={request.url}, vote={request.user_vote}, comment={request.feedback}")
     return {"message": "Feedback received. Thank you!"}

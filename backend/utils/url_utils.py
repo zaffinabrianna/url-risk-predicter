@@ -1,86 +1,112 @@
-from typing import Dict, List, Any
 import requests
-from urllib.parse import urljoin
+from urllib.parse import urlparse, urljoin
+from typing import Dict, Any, List
+import re
 
 
 def analyze_redirects(url: str) -> Dict[str, Any]:
     """
-    Analyze URL redirects and return detailed information.
+    Analyze URL redirects to detect potential malicious behavior.
 
     Args:
-        url: The URL to analyze
+        url: URL to analyze
 
     Returns:
-        Dictionary with redirect information:
-        - redirect_chain: List of all URLs in the chain
-        - num_redirects: Number of redirects
-        - is_redirect: Boolean indicating if redirects occurred
-        - resolved_url: Final URL after all redirects
+        Dictionary with redirect analysis results
     """
-    redirect_chain = []
-    current_url = url
-    max_redirects = 10
-
     try:
-        for _ in range(max_redirects):
-            response = requests.head(
-                current_url,
-                allow_redirects=False,
-                timeout=10,
-                headers={
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                }
-            )
+        # Follow redirects and collect information
+        response = requests.get(url, allow_redirects=True, timeout=10)
+        history = response.history
 
-            redirect_chain.append(current_url)
+        redirect_chain = []
+        for resp in history:
+            redirect_chain.append({
+                'status_code': resp.status_code,
+                'url': resp.url,
+                'headers': dict(resp.headers)
+            })
 
-            # Check if response is a redirect
-            if response.status_code in [301, 302, 303, 307, 308]:
-                location = response.headers.get('Location')
-                if location:
-                    # Convert relative URLs to absolute
-                    current_url = urljoin(current_url, location)
-                else:
-                    break
-            else:
-                break
+        # Add final response
+        redirect_chain.append({
+            'status_code': response.status_code,
+            'url': response.url,
+            'headers': dict(response.headers)
+        })
 
-    except requests.exceptions.RequestException as e:
-        # Handle network errors (timeout, connection refused, etc.)
         return {
-            "error": f"Network error: {str(e)}",
-            "redirect_chain": [url],
-            "num_redirects": 0,
-            "is_redirect": False,
-            "resolved_url": url
+            'num_redirects': len(history),
+            'redirect_chain': redirect_chain,
+            'final_url': response.url,
+            'status_code': response.status_code,
+            'has_redirects': len(history) > 0
         }
+
     except Exception as e:
-        # Handle other errors
         return {
-            "error": f"Unexpected error: {str(e)}",
-            "redirect_chain": [url],
-            "num_redirects": 0,
-            "is_redirect": False,
-            "resolved_url": url
+            'num_redirects': 0,
+            'redirect_chain': [],
+            'final_url': url,
+            'status_code': None,
+            'has_redirects': False,
+            'error': str(e)
         }
 
-    return {
-        "redirect_chain": redirect_chain,
-        "num_redirects": len(redirect_chain) - 1,
-        "is_redirect": len(redirect_chain) > 1,
-        "resolved_url": current_url
-    }
+
+def extract_domain(url: str) -> str:
+    """Extract domain from URL."""
+    try:
+        parsed = urlparse(url)
+        return parsed.netloc.lower()
+    except:
+        return url.lower()
 
 
-if __name__ == "__main__":
-    test_urls = [
-        "https://www.google.com",
-        "https://httpbin.org/redirect/1",
-        "https://httpbin.org/redirect/2",
-        "https://invalid-url-that-doesnt-exist.com"
+def is_valid_url(url: str) -> bool:
+    """Check if URL format is valid."""
+    try:
+        parsed = urlparse(url)
+        return all([parsed.scheme, parsed.netloc])
+    except:
+        return False
+
+
+def get_url_length_score(url: str) -> float:
+    """Calculate URL length suspiciousness score."""
+    # Remove protocol for length calculation
+    clean_url = url.split('://', 1)[-1] if '://' in url else url
+
+    if len(clean_url) > 150:
+        return 1.0
+    elif len(clean_url) > 100:
+        return 0.7
+    elif len(clean_url) > 50:
+        return 0.3
+    else:
+        return 0.0
+
+
+def detect_suspicious_patterns(url: str) -> List[str]:
+    """Detect suspicious patterns in URL."""
+    patterns = []
+    url_lower = url.lower()
+
+    # Common phishing patterns
+    suspicious_patterns = [
+        r'login[.-]?secure',
+        r'verify[.-]?account',
+        r'update[.-]?info',
+        r'confirm[.-]?details',
+        r'secure[.-]?login',
+        r'account[.-]?verify',
+        r'bank[.-]?login',
+        r'paypal[.-]?secure',
+        r'google[.-]?login',
+        r'facebook[.-]?login'
     ]
 
-    for url in test_urls:
-        print(f"\nTesting Url: {url}")
-        result = analyze_redirects(url)
-        print(f"Result: {result}")
+    for pattern in suspicious_patterns:
+        if re.search(pattern, url_lower):
+            patterns.append(f"Suspicious pattern: {pattern}")
+
+    return patterns
