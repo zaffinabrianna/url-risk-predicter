@@ -61,3 +61,10 @@ npm run dev
 ## Example
 ![Demo Screenshot](demo-screenshot.png) <!-- Add a real screenshot if available -->
 
+<<<<<<< HEAD
+=======
+## Contributing
+Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
+
+---
+>>>>>>> 0fde1e86b454a1cf577fd47937675bba63e7263e
