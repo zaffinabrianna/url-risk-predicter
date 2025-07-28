@@ -57,14 +57,3 @@ npm run dev
 1. Start the backend server.
 2. Start the frontend dev server.
 3. Open the frontend in your browser and enter a URL to analyze its risk.
-
-## Example
-![Demo Screenshot](demo-screenshot.png) <!-- Add a real screenshot if available -->
-
-<<<<<<< HEAD
-=======
-## Contributing
-Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
-
----
->>>>>>> 0fde1e86b454a1cf577fd47937675bba63e7263e
