@@ -40,6 +40,16 @@ function App() {
   const [doNotLog, setDoNotLog] = useState(false)
   const [feedbackLoading, setFeedbackLoading] = useState(false)
 
+  const clearResults = () => {
+    setUrl('')
+    setResult(null)
+    setError('')
+    setFeedback('')
+    setVote('')
+    setFeedbackStatus('')
+    setDoNotLog(false)
+  }
+
   const analyzeUrl = async () => {
     setError('');
     setResult(null);
@@ -262,6 +272,35 @@ function App() {
             >
               {isLoading ? 'Analyzing...' : 'Analyze'}
             </button>
+            {(result || error) && (
+              <button
+                onClick={clearResults}
+                style={{
+                  padding: '14px 20px',
+                  background: 'white',
+                  color: '#6b7280',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '10px',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  marginLeft: '10px',
+                }}
+                onMouseEnter={(e) => {
+                  const target = e.target as HTMLButtonElement
+                  target.style.borderColor = '#d1d5db'
+                  target.style.color = '#374151'
+                }}
+                onMouseLeave={(e) => {
+                  const target = e.target as HTMLButtonElement
+                  target.style.borderColor = '#e5e7eb'
+                  target.style.color = '#6b7280'
+                }}
+              >
+                Clear
+              </button>
+            )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', marginTop: '8px', marginBottom: '18px' }}>
             <input
