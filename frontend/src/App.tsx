@@ -50,6 +50,14 @@ function App() {
     setDoNotLog(false)
   }
 
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !isLoading && url.trim()) {
+      analyzeUrl()
+    } else if (e.key === 'Escape' && (result || error)) {
+      clearResults()
+    }
+  }
+
   const analyzeUrl = async () => {
     setError('');
     setResult(null);
@@ -227,6 +235,14 @@ function App() {
           }}>
             Smart Malicious URL Checker
           </p>
+          <p style={{
+            fontSize: '0.85rem',
+            color: '#9ca3af',
+            margin: '8px 0 0 0',
+            fontWeight: 400,
+          }}>
+            💡 Press Enter to analyze, Escape to clear
+          </p>
         </div>
 
         <div style={{ marginBottom: '28px' }}>
@@ -240,6 +256,7 @@ function App() {
               placeholder="Enter URL to analyze (e.g., https://example.com)..."
               value={url}
               onChange={(e) => setUrl(e.target.value)}
+              onKeyDown={handleKeyPress}
               style={{
                 flex: 1,
                 padding: '14px 18px',
