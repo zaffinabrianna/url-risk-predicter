@@ -9,9 +9,9 @@ WEIGHTS = {
     "suspicious_tld": 0.25,
     "keywords": 0.2,
     "entropy": (4.0, 0.15),  # (threshold, weight)
-    "punycode": 0.3,
-    "bit_squatting": 0.25,
-    "combosquatting": 0.2,
+    "punycode": 0.4,
+    "bit_squatting": 0.6,
+    "combosquatting": 0.4,
     "brand_similarity": 0.3,
     "long_url": (100, 0.1),  # (length, weight)
     "young_domain": (30, 0.2),  # (days, weight)

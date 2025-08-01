@@ -451,35 +451,6 @@ function App() {
                   letterSpacing: '-0.5px',
                 }}>{typeof result.risk_score === 'number' ? (result.risk_score * 100).toFixed(1) + '%' : 'Unknown'}</span>
               </div>
-              <div style={{
-                flex: 1,
-                minWidth: '120px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                background: '#fff',
-                borderRadius: '8px',
-                border: '1px solid #e5e7eb',
-                padding: '18px 0',
-                marginBottom: '8px',
-              }}>
-                <span style={{
-                  fontSize: '13px',
-                  color: '#64748b',
-                  fontWeight: 500,
-                  marginBottom: '6px',
-                }}>Confidence</span>
-                <span style={{
-                  display: 'inline-block',
-                  padding: '6px 18px',
-                  borderRadius: '999px',
-                  background: result.confidence === 'high' ? '#dcfce7' : result.confidence === 'medium' ? '#fef3c7' : '#f3f4f6',
-                  color: result.confidence === 'high' ? '#16a34a' : result.confidence === 'medium' ? '#d97706' : '#6b7280',
-                  fontWeight: 700,
-                  fontSize: '1.1rem',
-                  letterSpacing: '-0.5px',
-                }}>{result.confidence ? result.confidence.charAt(0).toUpperCase() + result.confidence.slice(1) : 'Unknown'}</span>
-              </div>
             </div>
 
             {result.risk_factors && result.risk_factors.length > 0 && (

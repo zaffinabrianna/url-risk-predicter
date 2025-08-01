@@ -20,7 +20,7 @@ SUSPICIOUS_KEYWORDS = [
 POPULAR_BRANDS = [
     'google', 'facebook', 'amazon', 'apple', 'microsoft', 'netflix',
     'paypal', 'ebay', 'linkedin', 'twitter', 'instagram', 'youtube',
-    'dropbox', 'spotify', 'uber', 'airbnb', 'stripe', 'shopify'
+    'dropbox', 'spotify', 'uber', 'airbnb', 'stripe', 'shopify', 'github'
 ]
 
 
@@ -119,22 +119,54 @@ def detect_bit_squatting(domain: str) -> bool:
     if domain_name in POPULAR_BRANDS:
         return False
 
-    # This is a simplified version - real implementation would need
-    # more sophisticated character similarity analysis
-    # Only flag if multiple suspicious chars are present or in suspicious patterns
+    # Check for suspicious character substitutions
     suspicious_chars = ['0', '1', 'l', 'i', 'o']
-    suspicious_count = sum(1 for char in suspicious_chars if char in domain)
+    suspicious_count = sum(
+        1 for char in suspicious_chars if char in domain_name)
 
-    # Only flag if multiple suspicious chars or specific patterns
+    # Only flag if multiple suspicious chars are present
     if suspicious_count >= 2:
         return True
 
-    # Check for specific suspicious patterns
-    suspicious_patterns = ['go0gle', 'g00gle', 'goog1e', 'g00g1e']
-    if any(pattern in domain for pattern in suspicious_patterns):
-        return True
+    # Check for similarity to known brands with suspicious substitutions
+    for brand in POPULAR_BRANDS:
+        if len(brand) > 3:  # Only check brands with meaningful length
+            # Check if domain is similar to brand with suspicious substitutions
+            if is_suspicious_brand_variation(domain_name, brand):
+                return True
 
     return False
+
+
+def is_suspicious_brand_variation(domain: str, brand: str) -> bool:
+    """Check if domain is a suspicious variation of a known brand."""
+    if len(domain) != len(brand):
+        return False
+
+    # Character substitution patterns
+    substitutions = {
+        'o': '0', '0': 'o',
+        'l': '1', '1': 'l',
+        'i': '1', '1': 'i',
+        'a': '@', '@': 'a',
+        's': '5', '5': 's',
+        'e': '3', '3': 'e'
+    }
+
+    # Check if domain is brand with suspicious substitutions
+    diff_count = 0
+    for i, (d_char, b_char) in enumerate(zip(domain, brand)):
+        if d_char != b_char:
+            # Check if it's a suspicious substitution
+            if (d_char in substitutions and substitutions[d_char] == b_char) or \
+               (b_char in substitutions and substitutions[b_char] == d_char):
+                diff_count += 1
+            else:
+                # Not a suspicious substitution, probably not a bit-squatting attack
+                return False
+
+    # If most differences are suspicious substitutions, it's likely bit-squatting
+    return diff_count >= 1 and diff_count <= 3
 
 
 def detect_combosquatting(domain: str) -> bool:
@@ -161,12 +193,24 @@ def check_brand_similarity(domain: str) -> Dict[str, bool]:
         # Skip if this is the legitimate brand domain
         if domain_name == brand:
             similarities[brand] = False
-        # Simple similarity check - could be enhanced with edit distance
-        elif brand in domain_lower or domain_lower in brand:
-            similarities[brand] = True
+        # Check for suspicious variations (brand + other words, typos, etc.)
+        elif brand in domain_lower:
+            # Check if it's just the brand name or if there are additional parts
+            domain_parts = domain_lower.split('.')[0].split('-')
+            if len(domain_parts) > 1 and brand in domain_parts:
+                # Brand name with additional words - suspicious
+                similarities[brand] = True
+            elif len(domain_lower) > len(brand) + 1:
+                # Brand name with slight variations - check for typos
+                if domain_lower.startswith(brand) or domain_lower.endswith(brand):
+                    similarities[brand] = True
+                else:
+                    similarities[brand] = False
+            else:
+                similarities[brand] = False
         else:
-            # Check for common typos or variations
-            if len(brand) > 3 and any(brand[i:i+3] in domain_lower for i in range(len(brand)-2)):
+            # Check for common typos or variations (only for longer brands to avoid false positives)
+            if len(brand) > 4 and any(brand[i:i+4] in domain_lower for i in range(len(brand)-3)):
                 similarities[brand] = True
             else:
                 similarities[brand] = False
