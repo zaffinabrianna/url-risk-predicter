@@ -59,6 +59,13 @@ def check_suspicious_keywords(domain: str) -> List[str]:
     found_keywords = []
     domain_lower = domain.lower()
 
+    # Extract domain name without TLD for brand checking
+    domain_name = domain_lower.split('.')[0]
+
+    # Skip keyword detection for legitimate brand domains
+    if domain_name in POPULAR_BRANDS:
+        return found_keywords
+
     for keyword in SUSPICIOUS_KEYWORDS:
         if keyword in domain_lower:
             found_keywords.append(keyword)
@@ -105,10 +112,29 @@ def detect_punycode(domain: str) -> bool:
 
 def detect_bit_squatting(domain: str) -> bool:
     """Detect bit-squatting attacks (similar domains with bit flips)."""
+    # Extract domain name without TLD for brand checking
+    domain_name = domain.split('.')[0]
+
+    # Skip for legitimate brand domains
+    if domain_name in POPULAR_BRANDS:
+        return False
+
     # This is a simplified version - real implementation would need
     # more sophisticated character similarity analysis
+    # Only flag if multiple suspicious chars are present or in suspicious patterns
     suspicious_chars = ['0', '1', 'l', 'i', 'o']
-    return any(char in domain for char in suspicious_chars)
+    suspicious_count = sum(1 for char in suspicious_chars if char in domain)
+
+    # Only flag if multiple suspicious chars or specific patterns
+    if suspicious_count >= 2:
+        return True
+
+    # Check for specific suspicious patterns
+    suspicious_patterns = ['go0gle', 'g00gle', 'goog1e', 'g00g1e']
+    if any(pattern in domain for pattern in suspicious_patterns):
+        return True
+
+    return False
 
 
 def detect_combosquatting(domain: str) -> bool:
@@ -128,11 +154,15 @@ def detect_combosquatting(domain: str) -> bool:
 def check_brand_similarity(domain: str) -> Dict[str, bool]:
     """Check for similarity to popular brands."""
     domain_lower = domain.lower()
+    domain_name = domain_lower.split('.')[0]  # Extract domain name without TLD
     similarities = {}
 
     for brand in POPULAR_BRANDS:
+        # Skip if this is the legitimate brand domain
+        if domain_name == brand:
+            similarities[brand] = False
         # Simple similarity check - could be enhanced with edit distance
-        if brand in domain_lower or domain_lower in brand:
+        elif brand in domain_lower or domain_lower in brand:
             similarities[brand] = True
         else:
             # Check for common typos or variations
