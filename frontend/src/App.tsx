@@ -225,7 +225,7 @@ function App() {
             marginBottom: '10px',
             letterSpacing: '-1px',
           }}>
-            LinkShield
+            URL Analyzer
           </h1>
           <p style={{
             fontSize: '1.08rem',
