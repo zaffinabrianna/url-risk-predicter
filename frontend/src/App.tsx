@@ -37,7 +37,6 @@ function App() {
   const [feedback, setFeedback] = useState('')
   const [vote, setVote] = useState('')
   const [feedbackStatus, setFeedbackStatus] = useState('')
-  const [doNotLog, setDoNotLog] = useState(false)
   const [feedbackLoading, setFeedbackLoading] = useState(false)
 
   const clearResults = () => {
@@ -47,7 +46,6 @@ function App() {
     setFeedback('')
     setVote('')
     setFeedbackStatus('')
-    setDoNotLog(false)
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -88,8 +86,7 @@ function App() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          url: urlToAnalyze,
-          do_not_log: doNotLog
+          url: urlToAnalyze
         })
       });
       let data;
@@ -140,8 +137,7 @@ function App() {
         body: JSON.stringify({
           url: urlToSend,
           user_vote: vote,
-          feedback: feedback,
-          do_not_log: doNotLog
+          feedback: feedback
         })
       });
       let data;
@@ -319,18 +315,7 @@ function App() {
               </button>
             )}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', marginTop: '8px', marginBottom: '18px' }}>
-            <input
-              type="checkbox"
-              id="doNotLog"
-              checked={doNotLog}
-              onChange={e => setDoNotLog(e.target.checked)}
-              style={{ marginRight: '8px' }}
-            />
-            <label htmlFor="doNotLog" style={{ fontSize: '14px', color: '#6b7280' }}>
-              Do not log this analysis (your result and feedback will not be saved)
-            </label>
-          </div>
+
         </div>
 
         {error && (
@@ -495,10 +480,10 @@ function App() {
             )}
 
             {/* Divider */}
-            {!doNotLog && <hr style={{ border: 'none', borderTop: '1px solid #e5e7eb', margin: '28px 0 18px 0' }} />}
+            <hr style={{ border: 'none', borderTop: '1px solid #e5e7eb', margin: '28px 0 18px 0' }} />
 
             {/* Feedback Section */}
-            {!doNotLog && (
+            {(
               <div style={{
                 backgroundColor: 'white',
                 borderRadius: '8px',

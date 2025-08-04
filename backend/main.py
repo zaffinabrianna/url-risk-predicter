@@ -4,11 +4,6 @@ from pydantic import BaseModel, HttpUrl, constr, validator
 from datetime import datetime
 from utils.url_analyzer import analyze_url
 import os
-import psycopg2
-from dotenv import load_dotenv
-
-load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
-DATABASE_URL = os.getenv('SUPABASE_DB_URL')
 
 app = FastAPI(
     title="API for project",
@@ -26,45 +21,24 @@ app.add_middleware(
 
 
 def save_analysis_event(url, risk_score, risk_level, risk_factors):
-    try:
-        conn = psycopg2.connect(DATABASE_URL)
-        cur = conn.cursor()
-        cur.execute(
-            'INSERT INTO analyses (url, risk_score, risk_level, risk_factors) VALUES (%s, %s, %s, %s)',
-            (url, risk_score, risk_level, risk_factors)
-        )
-        conn.commit()
-        cur.close()
-        conn.close()
-    except Exception as e:
-        print(f"[DB] Failed to save analysis: {e}")
+    # Analysis events are logged to console for now
+    print(
+        f"[ANALYSIS] URL: {url}, Risk: {risk_level}, Score: {risk_score}, Factors: {risk_factors}")
 
 
 def save_feedback(url, user_vote, feedback):
-    try:
-        conn = psycopg2.connect(DATABASE_URL)
-        cur = conn.cursor()
-        cur.execute(
-            'INSERT INTO feedback (url, user_vote, feedback) VALUES (%s, %s, %s)',
-            (url, user_vote, feedback)
-        )
-        conn.commit()
-        cur.close()
-        conn.close()
-    except Exception as e:
-        print(f"[DB] Failed to save feedback: {e}")
+    # Feedback is logged to console for now
+    print(f"[FEEDBACK] URL: {url}, Vote: {user_vote}, Comment: {feedback}")
 
 
 class AnalyzeRequest(BaseModel):
     url: HttpUrl
-    do_not_log: bool = False
 
 
 class FeedbackRequest(BaseModel):
     url: HttpUrl
     user_vote: str
     feedback: constr(max_length=500) = None
-    do_not_log: bool = False
 
     @validator('user_vote')
     def vote_must_be_valid(cls, v):
@@ -96,32 +70,22 @@ async def health_check():
 @app.post("/analyze")
 async def analyze_url_endpoint(request: AnalyzeRequest):
     url = str(request.url)
-    do_not_log = request.do_not_log
     result = analyze_url(url)
-    if not do_not_log:
-        # Save analysis event to database
-        save_analysis_event(
-            url,
-            result.get('risk_score'),
-            result.get('risk_level'),
-            ', '.join(result.get('risk_factors', [])) if result.get(
-                'risk_factors') else None
-        )
-        print(f"Analysis logged for: {url}")
-    else:
-        print(f"Analysis NOT logged for: {url} (user opted out)")
+    # Save analysis event to console
+    save_analysis_event(
+        url,
+        result.get('risk_score'),
+        result.get('risk_level'),
+        ', '.join(result.get('risk_factors', [])) if result.get(
+            'risk_factors') else ''
+    )
     return result
 
 
 @app.post("/feedback")
 async def submit_feedback(request: FeedbackRequest):
-    if request.do_not_log:
-        print(f"Feedback NOT logged for: {request.url} (user opted out)")
-        return {"message": "Feedback not logged (user opted out)."}
-    # Save feedback to database
+    # Save feedback to console
     save_feedback(str(request.url), request.user_vote, request.feedback)
-    print(
-        f"Feedback received: url={request.url}, vote={request.user_vote}, comment={request.feedback}")
     return {"message": "Feedback received. Thank you!"}
 
 if __name__ == "__main__":
