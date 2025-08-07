@@ -7,12 +7,10 @@ A full-stack application that predicts the risk level of a given URL using machi
 - **Modern Frontend:** Responsive React + Tailwind CSS interface for user-friendly interaction.
 - **Python Backend:** FastAPI backend for risk analysis and ML integration.
 - **Extensible Architecture:** Modular codebase for easy feature expansion.
-- **Database Ready:** Schema provided for easy integration with Supabase/PostgreSQL
 
 ## Tech Stack
 - **Frontend:** React, TypeScript, Tailwind CSS, Vite
 - **Backend:** Python, FastAPI
-- **Database:** Supabase (PostgreSQL)
 - **Other:** Docker (optional), Jupyter Notebooks (for ML prototyping)
 
 ## Project Structure
