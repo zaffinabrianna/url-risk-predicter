@@ -21,7 +21,6 @@ url-risk-predicter/
   ├── backend/         # FastAPI backend and ML logic
   ├── frontend/        # React frontend
   ├── notebooks/       # Jupyter notebooks for ML experiments
-  ├── supabase/        # Database schema
   └── README.md
 ```
 
@@ -48,10 +47,6 @@ cd frontend
 npm install
 npm run dev
 ```
-
-### Database Setup (Supabase)
-- Create a Supabase project and run the SQL in `supabase/schema.sql`.
-- Configure your backend to connect to the database (see backend docs/config).
 
 ## Usage
 1. Start the backend server.
